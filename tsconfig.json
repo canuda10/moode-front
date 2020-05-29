@@ -16,6 +16,10 @@
       "dom"
     ],
     "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,

@@ -1,15 +1,19 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { delay, retryWhen, tap } from 'rxjs/operators';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 
+export type cmd_t   = 'next' | 'pause' | 'previous' | 'setvol';
 export type state_t = 'play' | 'stop' | 'pause';
 
 interface MpdMessage {
-  cmd: 'next' | 'pause' | 'previous' | 'volume';
-  pause: number;
-  state: state_t;
+  cmd:    cmd_t;
+  pause:  number;
+  state:  state_t;
   volume: number;
 }
+
+const RECONNECT_INTERVAL = 2000;
 
 @Injectable({
   providedIn: 'root'
@@ -17,24 +21,39 @@ interface MpdMessage {
 export class MpdService {
   private socket: WebSocketSubject<Partial<MpdMessage>>
 
-  readonly state: BehaviorSubject<state_t>;
-  readonly volume: BehaviorSubject<number>
+  readonly connected: BehaviorSubject<undefined | boolean>;
+  readonly state:     BehaviorSubject<state_t>;
+  readonly volume:    BehaviorSubject<number>
 
-  constructor() { 
-    this.state = new BehaviorSubject<state_t>('stop');
-    this.volume = new BehaviorSubject(0);
+  constructor() {
+    this.connected = new BehaviorSubject<undefined | boolean>(undefined);
+    this.state     = new BehaviorSubject<state_t>('stop');
+    this.volume    = new BehaviorSubject(0);
 
     this.socket = webSocket({
-      url: 'ws://raspi1.local:3000',
-      openObserver: {
-        next: ev => console.log(ev)
-      },
-      closeObserver: {
-        next: ev => console.log(ev)
-      }
+      // url: 'ws://raspi1.local:3000',
+      url: 'ws://localhost:3000',
+      openObserver: { next: ev => {
+        console.log(`Connection open: "${ev}".`);
+        this.connected.next(true);
+      } },
+      closeObserver: { next: ev => {
+        console.log(`Connection closed: "${ev}".`);
+        this.connected.next(false);
+      } },
     });
 
-    this.socket.asObservable().subscribe(
+    this.socket
+    .pipe(
+      tap(msg => {}),
+      retryWhen(errors =>
+        errors.pipe(
+          tap(err => console.error('Got Error', err)),
+          delay(RECONNECT_INTERVAL)
+        )
+      )
+    )
+    .subscribe(
       msg => this.onResponse(msg),
       err => this.onError(err),
     );
@@ -45,10 +64,8 @@ export class MpdService {
   }
 
   private onResponse(msg: Partial<MpdMessage>): void {
-    if (msg.state != undefined && msg.state != this.state.value) {
+    if (msg.state != undefined && msg.state != this.state.value)
       this.state.next(msg.state);
-    }
-
 
     if (msg.volume != undefined && msg.volume != this.volume.value)
       this.volume.next(msg.volume);
@@ -59,7 +76,7 @@ export class MpdService {
   }
 
   async pause(value: number): Promise<void> {
-    this.socket.next({ pause: value });
+    this.socket.next({ cmd: 'pause', pause: value });
   }
 
   async previous(): Promise<void> {
@@ -68,6 +85,6 @@ export class MpdService {
 
   async setvol(value: number): Promise<void> {
     if (value != this.volume.value)
-      this.socket.next({ volume: value });
+      this.socket.next({ cmd: 'setvol', volume: value });
   }
 }

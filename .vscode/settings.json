@@ -3,5 +3,13 @@
         "dist": true,
         "node_modules": true
     },
-    "editor.rulers": [ 80 ]
+    "editor.rulers": [
+        80
+    ],
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "alignment.surroundSpace": {
+        "colon": [-1, 1]
+    }
 }

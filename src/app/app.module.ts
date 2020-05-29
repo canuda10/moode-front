@@ -1,3 +1,4 @@
+import { OverlayModule } from '@angular/cdk/overlay';
 import { NgModule } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,6 +24,7 @@ import { MpdService } from './mpd.service';
     MatSliderModule,
     MatIconModule,
     MatButtonModule,
+    OverlayModule,
   ],
   providers: [
     MpdService,

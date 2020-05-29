@@ -2,47 +2,49 @@
 <mat-toolbar color="primary">
   <span>Moode</span>
   <span class="spacer"></span>
-  <!-- <mat-spinner color="accent" diameter="40"></mat-spinner> -->
+  <!-- <mat-spinner *ngIf="!(connected | async)" color="accent" diameter="40"></mat-spinner> -->
 </mat-toolbar>
 <p>State: {{ state | async }}</p>
 <p>Volume: {{ volume | async }}</p>
 <mat-toolbar>
   <mat-toolbar-row class="onlySmall">
-    <button mat-icon-button (click)="decVol()"><mat-icon>volume_down</mat-icon></button>
+    <button mat-icon-button (click)="decVol()">
+      <mat-icon>volume_down</mat-icon>
+    </button>
     <mat-slider color="primary"
       (change)="onVolumeChange($event)"
-      (input)="onVolumeInput($event)" 
+      (input)="onVolumeInput($event)"
       [value]="volume | async"
     ></mat-slider>
-    <button mat-icon-button (click)="incVol()"><mat-icon>volume_up</mat-icon></button>
+    <button mat-icon-button (click)="incVol()">
+      <mat-icon>volume_up</mat-icon>
+    </button>
   </mat-toolbar-row>
 
   <mat-toolbar-row>
-    <button mat-button
-      (click)="previous()"
-      ><mat-icon>skip_previous</mat-icon>
+    <button mat-button (click)="previous()">
+      <mat-icon>skip_previous</mat-icon>
     </button>
-    <button *ngIf="(state | async) != 'play'" mat-button
-      (click)="pause(0)"
-      ><mat-icon>play_arrow</mat-icon>
+    <button mat-button (click)="playPause()">
+      <mat-icon>{{ playPauseIcon | async }}</mat-icon>
     </button>
-    <button *ngIf="(state | async) == 'play'" mat-button
-      (click)="pause(1)"
-      ><mat-icon>pause</mat-icon>
+    <button mat-button (click)="next()">
+      <mat-icon>skip_next</mat-icon>
     </button>
-    <button mat-button
-      (click)="next()"
-      ><mat-icon>skip_next</mat-icon>
-    </button>
+
     <span class="onlyBig spacer"></span>
     <span class="onlyBig">
-      <button mat-icon-button (click)="decVol()"><mat-icon>volume_down</mat-icon></button>
+      <button mat-icon-button (click)="decVol()">
+        <mat-icon>volume_down</mat-icon>
+      </button>
       <mat-slider color="primary"
         (change)="onVolumeChange($event)"
-        (input)="onVolumeInput($event)" 
+        (input)="onVolumeInput($event)"
         [value]="volume | async"
       ></mat-slider>
-      <button mat-icon-button (click)="incVol()"><mat-icon>volume_up</mat-icon></button>
+      <button mat-icon-button (click)="incVol()">
+        <mat-icon>volume_up</mat-icon>
+      </button>
     </span>
   </mat-toolbar-row>
 </mat-toolbar>
