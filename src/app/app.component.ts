@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatSliderChange } from '@angular/material/slider';
 import { BehaviorSubject } from 'rxjs';
-import { MpdService } from './mpd.service';
+import { MpdService, state_t } from './mpd.service';
 
 @Component({
   selector: 'app-root',
@@ -10,12 +10,15 @@ import { MpdService } from './mpd.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  private voluming = false;
+  private volumeIncrement: number;
+  private voluming: boolean;
+  
+  readonly state: BehaviorSubject<state_t>;
+  readonly volume: BehaviorSubject<number>;
 
   // _volume?: number;
-  title = 'moode-front';
+  // title = 'moode-front';
 
-  readonly volume = new BehaviorSubject(0);
   // get volume(): number {
   //   return this._volume != undefined ? this._volume : this.mpdService.volume;
   // }
@@ -24,6 +27,12 @@ export class AppComponent {
   // }
 
   constructor(private mpdService: MpdService) {
+    this.volumeIncrement = 10;
+    this.voluming = false;
+    
+    this.state = this.mpdService.state;
+    this.volume = new BehaviorSubject(0);
+  
     mpdService.volume.asObservable().subscribe(value => 
     {
       // console.log(`volume received: ${value}`);
@@ -32,17 +41,43 @@ export class AppComponent {
     });
   }
 
-  onVolumeChange(ev: MatSliderChange): void {
-    this.voluming = false;
-    this.mpdService.setvol(ev.value);
-    // this.volume = ev.value;
-    // delete this._volume;
+  async decVol(): Promise<void> {
+    const vol = Math.max(0, this.volume.value - this.volumeIncrement);
+    this.mpdService.setvol(vol);
   }
 
-  onVolumeInput(ev: MatSliderChange): void {
+  async incVol(): Promise<void> {
+    const vol = Math.min(100, this.volume.value + this.volumeIncrement);
+    this.mpdService.setvol(vol);
+  }
+
+  async next(): Promise<void> {
+    this.mpdService.next();
+  }
+
+  async onVolumeChange(ev: MatSliderChange): Promise<void> {
+    if (ev.value == null)
+      return;
+
+    this.voluming = false;
+    this.mpdService.setvol(ev.value);
+  }
+
+  async onVolumeInput(ev: MatSliderChange): Promise<void> {
+    if (ev.value == null)
+      return;
+
     this.voluming = true;
     this.mpdService.setvol(ev.value);
-    // this.volume = ev.value;
-    // this._volume = ev.value;
+    // we update the local volume value
+    this.volume.next(ev.value);
+  }
+
+  async pause(value: number): Promise<void> {
+    this.mpdService.pause(value);
+  }
+
+  async previous(): Promise<void> {
+    this.mpdService.previous();
   }
 }
