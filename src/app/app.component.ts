@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatSpinner } from '@angular/material/progress-spinner';
 import { MatSliderChange } from '@angular/material/slider';
 import { BehaviorSubject } from 'rxjs';
-import { MpdService, state_t } from './mpd.service';
+import { MpdService, state_t, data_t } from './mpd.service';
 
 function assertUnreachable(x: never): never {
   throw new Error(`Unexpected value: "${x}".`);
@@ -21,6 +21,7 @@ export class AppComponent {
   private volumeIncrement:     number;
   private userIsSettingVolume: boolean;
 
+  readonly currentsong:   BehaviorSubject<data_t>;
   readonly playPauseIcon: BehaviorSubject<string>;
   readonly state:         BehaviorSubject<state_t>;
   readonly volume:        BehaviorSubject<number>;
@@ -32,6 +33,7 @@ export class AppComponent {
     this.volumeIncrement     = 10;
     this.userIsSettingVolume = false;
 
+    this.currentsong   = this.mpdService.currentsong;
     this.playPauseIcon = new BehaviorSubject('');
     this.state         = this.mpdService.state;
     this.volume        = new BehaviorSubject(0);
@@ -92,6 +94,9 @@ export class AppComponent {
     this.mpdService.next();
   }
 
+  /**
+   * Gets called when the volume slider finishes changing (f.e. onmouseup)
+   */
   async onVolumeChange(ev: MatSliderChange): Promise<void> {
     if (ev.value == null)
       return;
@@ -101,6 +106,9 @@ export class AppComponent {
     this.mpdService.setvol(ev.value);
   }
 
+  /**
+   * Gets called whenever the volume slider changes, immediately.
+   */
   async onVolumeInput(ev: MatSliderChange): Promise<void> {
     if (ev.value == null)
       return;

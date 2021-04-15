@@ -4,13 +4,15 @@ import { delay, retryWhen, tap } from 'rxjs/operators';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 
 export type cmd_t   = 'next' | 'pause' | 'previous' | 'setvol';
+export type data_t  = { [key: string]: string };
 export type state_t = 'play' | 'stop' | 'pause';
 
 interface MpdMessage {
-  cmd:    cmd_t;
-  pause:  number;
-  state:  state_t;
-  volume: number;
+  cmd:         cmd_t;
+  currentsong: data_t;
+  pause:       number;
+  state:       state_t;
+  volume:      number;
 }
 
 const RECONNECT_INTERVAL = 2000;
@@ -21,18 +23,20 @@ const RECONNECT_INTERVAL = 2000;
 export class MpdService {
   private socket: WebSocketSubject<Partial<MpdMessage>>
 
-  readonly connected: BehaviorSubject<undefined | boolean>;
-  readonly state:     BehaviorSubject<state_t>;
-  readonly volume:    BehaviorSubject<number>
+  readonly connected:   BehaviorSubject<undefined | boolean>;
+  readonly currentsong: BehaviorSubject<data_t>;
+  readonly state:       BehaviorSubject<state_t>;
+  readonly volume:      BehaviorSubject<number>;
 
   constructor() {
-    this.connected = new BehaviorSubject<undefined | boolean>(undefined);
-    this.state     = new BehaviorSubject<state_t>('stop');
-    this.volume    = new BehaviorSubject(0);
+    this.connected   = new BehaviorSubject<undefined | boolean>(undefined);
+    this.currentsong = new BehaviorSubject({});
+    this.state       = new BehaviorSubject<state_t>('stop');
+    this.volume      = new BehaviorSubject(0);
 
     this.socket = webSocket({
-      // url: 'ws://raspi1.local:3000',
-      url: 'ws://localhost:3000',
+      url: 'ws://raspi1.local:3000',
+      // url: 'ws://localhost:3000',
       openObserver: { next: ev => {
         console.log(`Connection open: "${ev}".`);
         this.connected.next(true);
@@ -45,7 +49,7 @@ export class MpdService {
 
     this.socket
     .pipe(
-      tap(msg => {}),
+      // tap(msg => {}),
       retryWhen(errors =>
         errors.pipe(
           tap(err => console.error('Got Error', err)),
@@ -69,6 +73,14 @@ export class MpdService {
 
     if (msg.volume != undefined && msg.volume != this.volume.value)
       this.volume.next(msg.volume);
+
+    if (msg.currentsong != undefined) {
+      const data = {
+        ...this.currentsong.value,
+        ...msg.currentsong,
+      }
+      this.currentsong.next(data);
+    }
   }
 
   async next(): Promise<void> {

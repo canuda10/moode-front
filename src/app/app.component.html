@@ -4,9 +4,12 @@
   <span class="spacer"></span>
   <!-- <mat-spinner *ngIf="!(connected | async)" color="accent" diameter="40"></mat-spinner> -->
 </mat-toolbar>
+<p>Title: {{ (currentsong | async)?.Title }}</p>
+<p>Name: {{ (currentsong | async)?.Name }}</p>
 <p>State: {{ state | async }}</p>
 <p>Volume: {{ volume | async }}</p>
 <mat-toolbar>
+  <!-- Only in small screens, a volume row. -->
   <mat-toolbar-row class="onlySmall">
     <button mat-icon-button (click)="decVol()">
       <mat-icon>volume_down</mat-icon>
